@@ -1,0 +1,14 @@
+# Temporary and local files.
+*.json
+*.png
+*.txt
+*.csv
+profile*
+.vscode/
+__pycache__/
+
+# Unrelated files.
+x/
+run/
+dl.py
+mpa.py
