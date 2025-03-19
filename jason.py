@@ -19,7 +19,7 @@ from skbio.stats.distance import DistanceMatrix, permanova
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 
-from abundance import load_data, sort_columns
+from abundance import AbundancePaths, load_data, sort_columns
 from confidence_ellipse import confidence_ellipse
 from samplenaming import LUNA_GROUPS, fix_name, fix_name2, sample_group
 
@@ -38,12 +38,6 @@ REFSEQ_FILE = f'{DATA_DIR}/refseq/viral.1.genomic.json'
 KRAKEN_SPECIES_FILE = '../data/species_krk.json'
 PHYLUM_TO_MOLTYPE_FILE = '../data/vir_phylum_moltype.json'
 HUHO_TID_FILE = '../data/human_host.tid.txt'
-
-ABND_KRAKEN_NAMES = f'{DATA_DIR}/ww-kraken/*.vir.json'
-ABND_KRAKEN_TIDS = f'{DATA_DIR}/ww-kraken/*.tid.json'
-ABND_KRAKEN_GEN = f'{DATA_DIR}/ww-kraken/*.gen.json'
-ABND_KRAKEN_PHY = f'{DATA_DIR}/ww-kraken/*.phy.json'
-ABND_KRAKEN_VIROR = f'{DATA_DIR}/ww-kraken/*.viror.json'
 
 
 def load_human_host():
@@ -197,7 +191,7 @@ def jason_plot(df: pd.DataFrame, groups=None):
 
 
 def compare_abnd():
-    df = load_data(ABND_KRAKEN_TIDS, remove_spike=True)
+    df = load_data(AbundancePaths.tids, remove_spike=True)
     # print(df)
 
     d = squareform(pdist(df.values, 'braycurtis'))
@@ -276,7 +270,7 @@ def diversity():
     assert len(sys.argv) == 3, 'Usage: diversity remove_spike?(0/1)'
     rmspike = {'0': False, '1': True}[sys.argv[2]]
     print(f'{rmspike=}')
-    df = load_data(ABND_KRAKEN_TIDS, remove_spike=rmspike)
+    df = load_data(AbundancePaths.tids, remove_spike=rmspike)
     idx: list[str] = df.index.tolist()
 
     ents = [entropy(x) for x in df.values]
@@ -433,12 +427,12 @@ def diversity():
 
 
 def plot_stuff():
-    df = load_data(ABND_KRAKEN_NAMES, remove_spike=True)
+    df = load_data(AbundancePaths.names, remove_spike=True)
     jason_plot(df, LUNA_GROUPS)
 
 
 def dnarna():
-    df = load_data(ABND_KRAKEN_PHY, remove_spike=True, phylum_mode=True)
+    df = load_data(AbundancePaths.phy, remove_spike=True, phylum_mode=True)
     idx = df.index.tolist()
     cols = df.columns.tolist()
 
@@ -500,7 +494,7 @@ def mannwhit():
         case _:
             raise ValueError(f'bad mode: {MODE!r}')
 
-    df = load_data(ABND_KRAKEN_NAMES, remove_spike=True)
+    df = load_data(AbundancePaths.names, remove_spike=True)
     species = df.columns.tolist()
     tests = []
 
@@ -543,12 +537,12 @@ def mannwhit():
 
 
 def export():
-    df = load_data(ABND_KRAKEN_NAMES)
+    df = load_data(AbundancePaths.names)
     df.to_csv('data.csv')
 
 
 def export_permanova():
-    df = load_data(ABND_KRAKEN_TIDS, remove_spike=True)
+    df = load_data(AbundancePaths.tids, remove_spike=True)
     d = pd.DataFrame(squareform(pdist(df.values, 'braycurtis')))
     print(d.shape)
     # print(d)
@@ -576,7 +570,7 @@ def export_permanova():
 
 
 def plot_human_host():
-    df = load_data(ABND_KRAKEN_TIDS, remove_spike=False)
+    df = load_data(AbundancePaths.tids, remove_spike=False)
     print(df.shape)
     # huho = load_human_host()
     huho = {x.strip() for x in open(HUHO_TID_FILE)}
@@ -605,7 +599,7 @@ def plot_human_host():
 
 
 def print_human_host():
-    df = load_data(ABND_KRAKEN_TIDS, remove_spike=False)
+    df = load_data(AbundancePaths.tids, remove_spike=False)
     print(df.shape)
     huho = {x.strip() for x in open(HUHO_TID_FILE)}
     df = df.loc[:, [x in huho for x in df]]
@@ -653,7 +647,7 @@ def rarefy():
 
 
 def count_viral_reads():
-    df = load_data(ABND_KRAKEN_VIROR, remove_spike=False)
+    df = load_data(AbundancePaths.viror, remove_spike=False)
     vir = (1 - df['Other'].values) * 100
     print('with spike: {:.2g}% +- {:.2g}%'.format(vir.mean(), vir.std()))
 
@@ -663,7 +657,7 @@ def count_viral_reads():
         print('  {: <8} {:.2g}% +- {:.2g}%'.format(g, vir.mean(), vir.std()))
         m_with_spike[g] = vir.tolist()
 
-    df = load_data(ABND_KRAKEN_VIROR, remove_spike='Other')
+    df = load_data(AbundancePaths.viror, remove_spike='Other')
     vir = (1 - df['Other'].values) * 100
     print('without spike: {:.2g}% +- {:.2g}%'.format(vir.mean(), vir.std()))
 

@@ -6,6 +6,17 @@ import pandas as pd
 
 from samplenaming import fix_name
 
+DATA_DIR = '/dfs7/whitesonlab/alavon/Data'
+
+
+class AbundancePaths:
+    names = f'{DATA_DIR}/ww-kraken/*.vir.json'
+    tids = f'{DATA_DIR}/ww-kraken/*.tid.json'
+    gen = f'{DATA_DIR}/ww-kraken/*.gen.json'
+    phy = f'{DATA_DIR}/ww-kraken/*.phy.json'
+    viror = f'{DATA_DIR}/ww-kraken/*.viror.json'
+
+
 SPIKE_TAXA = [
     'NC_003045',  # Bovine covid
     'NC_006213',  # Human coronavirus OC43
