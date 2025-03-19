@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	inDir = "../data/kmers"
+	inDir = config.WSDataDir + "/kmers"
 
 	nbits    = 32
 	nbytes   = 1 << (nbits - 3)

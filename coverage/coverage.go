@@ -17,7 +17,6 @@ func main() {
 	var lens map[string]int
 	if len(os.Args) == 4 {
 		lens = map[string]int{}
-		// common.Die(jio.Read("../../../Data/refseq/viral.1.genomic.lens.json", &lens))
 		common.Die(jio.Read(os.Args[3], &lens))
 	}
 

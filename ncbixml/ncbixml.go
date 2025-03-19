@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	dir = "/dfs7/whitesonlab/alavon/Data/ncbi/"
+	dir = config.DataDir + "/ncbi/"
 )
 
 func main() {

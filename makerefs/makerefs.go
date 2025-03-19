@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"lab/lazy"
 	"strings"
 
@@ -15,9 +16,8 @@ import (
 )
 
 const (
-	outFile = "../data/taxref/%.fasta"
-	// ncbiFile = "../../../Data/ncbi/sequence.fasta"
-	ncbiFile = "/dfs7/whitesonlab/alavon/Data/refseq/viral.1.genomic.fasta.zst"
+	outFile  = config.WSDataDir + "/taxref/%.fasta"
+	ncbiFile = config.DataDir + "/refseq/viral.1.genomic.fasta.zst"
 )
 
 func main() {

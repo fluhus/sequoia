@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"lab/genbankplus"
 	"runtime/debug"
 
@@ -19,7 +20,7 @@ import (
 const (
 	mustHaveSequence = false
 
-	dir            = "/dfs7/whitesonlab/alavon/Data/refseq/"
+	dir            = config.DataDir + "/refseq/"
 	pgrFile        = dir + "viral.1.genomic.gbff.gz"
 	missingPGRFile = dir + "vsp2_missing.pgr"
 	outMeta        = dir + "viral.1.genomic.json"

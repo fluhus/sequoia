@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"iter"
 	"lab/common"
+	"lab/config"
 	"os"
 	"regexp"
 	"runtime/debug"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	goFile = "/dfs7/whitesonlab/alavon/Data/go/filtered_goa_uniprot_all.gaf.gz"
+	goFile = config.DataDir + "/go/filtered_goa_uniprot_all.gaf.gz"
 )
 
 func main() {

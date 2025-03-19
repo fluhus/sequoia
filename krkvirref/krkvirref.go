@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"runtime/debug"
 
 	"github.com/fluhus/biostuff/formats/fasta"
@@ -14,8 +15,8 @@ import (
 
 const (
 	krkFile    = "krk_viral.json"
-	refseqFile = "/dfs7/whitesonlab/alavon/Data/refseq/viral.1.genomic.fasta.zst"
-	outFile    = "/dfs7/whitesonlab/alavon/Data/refseq/kraken.fa.zst"
+	refseqFile = config.DataDir + "/refseq/viral.1.genomic.fasta.zst"
+	outFile    = config.DataDir + "/refseq/kraken.fa.zst"
 )
 
 func main() {

@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"lab/common"
+	"lab/config"
 
 	"github.com/fluhus/gostuff/jio"
 	"github.com/fluhus/gostuff/sets"
@@ -11,7 +12,7 @@ import (
 
 func main() {
 	tid2nc := map[string][]string{}
-	common.Die(jio.Read("../../../Data/refseq/tid2nc.json", &tid2nc))
+	common.Die(jio.Read(config.DataDir+"/refseq/tid2nc.json", &tid2nc))
 	// common.Die(jio.Read("species_krk.json", &tid2nc)) // Kraken's mapping doesn't have all of its output species.
 	fmt.Println(len(tid2nc))
 
