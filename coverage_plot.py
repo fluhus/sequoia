@@ -148,7 +148,7 @@ def violin(d: dict[str, list], rotate_xticks=None):
 
 def main():
     if len(sys.argv) not in {2, 3}:
-        print('Usage:', sys.argv[0], 'input_dir [title]')
+        print('Usage:', 'coverage_plot input_dir [title]')
         exit(1)
 
     print('Starting')
@@ -226,6 +226,3 @@ def main():
         with ctx('cov-prc', dpi=500, sizeratio=0.5):
             violin(pp)
             plt.ylabel('Percent coverage')
-
-
-main()
