@@ -1,3 +1,7 @@
+github.com/fluhus/biostuff v1.2.0 h1:CfWnMIuIJM5emgu3vUwRx0w0HY9PD4IgvTHbIV4jctY=
+github.com/fluhus/biostuff v1.2.0/go.mod h1:K7wsBKTOOEe1RAYawnmYBxBboqxqGGxq4LN18N7O9IY=
+github.com/fluhus/gostuff v1.2.0 h1:QbzQhXVJpxwEDNXXYWGuoXCBrm0eVlCHjV3bx5habDo=
+github.com/fluhus/gostuff v1.2.0/go.mod h1:Ors3WQq2anpr3FTDqxD3M3CBsHt4vm3nO+GBkV79XYo=
 github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zttxdo=
 github.com/klauspost/compress v1.18.0/go.mod h1:2Pp+KzxcywXVXMr50+X0Q/Lsb43OQHYWRCY2AiWywWQ=
 github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=
