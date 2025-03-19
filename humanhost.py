@@ -6,9 +6,10 @@ from matplotlib import pyplot as plt
 from myplot import ctx
 
 from abundance import AbundancePaths, load_data
+from config import WS_DATA_DIR
 from samplenaming import LUNA_GROUPS
 
-HUHO_TID_FILE = '../data/human_host.tid.txt'
+HUHO_TID_FILE = f'{WS_DATA_DIR}/human_host.tid.txt'
 
 
 def main_plot():
@@ -53,7 +54,7 @@ def main_print():
 
     del df, huho
 
-    krk = json.load(open('../data/krk_std.json'))
+    krk = json.load(open(f'{WS_DATA_DIR}/krk_std.json'))
     for x in a:
         xx = krk[x]
         print(','.join([xx['Name']] + xx['Accs']))

@@ -14,6 +14,7 @@ from myplot import ctx
 from pympler.asizeof import asizeof
 from scipy.stats import kendalltau
 
+from config import WS_DATA_DIR
 from samplenaming import LUNA_GROUPS
 
 WITH_TAU = True
@@ -21,8 +22,8 @@ WITH_COVERAGE = True
 WITH_LOG_Y = False
 
 SAMPLES_FILE = 'samples.txt'
-KRK_FILE = '../data/krk_viral.json'
-COV_SPECIES = json.load(open('../data/cov_species.json'))
+KRK_FILE = f'{WS_DATA_DIR}/krk_viral.json'
+COV_SPECIES = json.load(open(f'{WS_DATA_DIR}/cov_species.json'))
 RAW_COV_FILE_NAME_RE = re.compile(r'^([^\.]+)\.([^\.]+)\.cov\.json$')
 COV_ANNOT = {
     (False, False): '',

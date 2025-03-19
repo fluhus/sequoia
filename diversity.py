@@ -9,12 +9,13 @@ from myplot import ctx
 from scipy.stats import entropy
 
 from abundance import AbundancePaths, load_data
+from config import WS_DATA_DIR
 from samplenaming import LUNA_GROUPS, fix_name
 
 
 def load_vsp2_taxids() -> set[str]:
     """Returns VSP2 tax IDs."""
-    data = json.load(open('../data/vsp2_graph.json'))
+    data = json.load(open(f'{WS_DATA_DIR}/vsp2_graph.json'))
     return {tid for x in data.values() for tid in x.get('TIDs', [])}
 
 
@@ -143,7 +144,7 @@ def main():
 
     if False:
         # Print VSP names.
-        krk = json.load(open('../data/krk_std2.json'))
+        krk = json.load(open(f'{WS_DATA_DIR}/krk_std2.json'))
         for sp in sorted([krk[x]['Name'] for x in df.columns.tolist()]):
             print(sp)
         return

@@ -5,9 +5,10 @@ from matplotlib import pyplot as plt
 from myplot import ctx
 
 from abundance import AbundancePaths, load_data, sort_columns
+from config import WS_DATA_DIR
 from samplenaming import LUNA_GROUPS, fix_name2
 
-PHYLUM_TO_MOLTYPE_FILE = '../data/vir_phylum_moltype.json'
+PHYLUM_TO_MOLTYPE_FILE = f'{WS_DATA_DIR}/vir_phylum_moltype.json'
 
 
 def main():

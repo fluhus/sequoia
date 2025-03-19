@@ -4,9 +4,8 @@ from glob import glob
 import numpy as np
 import pandas as pd
 
+from config import DATA_DIR
 from samplenaming import fix_name
-
-DATA_DIR = '/dfs7/whitesonlab/alavon/Data'
 
 
 class AbundancePaths:

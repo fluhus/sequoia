@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from myplot import ctx
 
 from abundance import AbundancePaths, load_data
+from config import DATA_DIR, WS_DATA_DIR
 from samplenaming import LUNA_GROUPS, fix_name2
 
 # Run parameters.
@@ -18,9 +19,8 @@ ALT_TOP = None
 WITH_CMAP = True
 
 # Constant data.
-DATA_DIR = '/dfs7/whitesonlab/alavon/Data'
 REFSEQ_FILE = f'{DATA_DIR}/refseq/viral.1.genomic.json'
-KRAKEN_SPECIES_FILE = '../data/species_krk.json'
+KRAKEN_SPECIES_FILE = f'{WS_DATA_DIR}/species_krk.json'
 
 
 def colors(name: str, n=None, reverse=False):

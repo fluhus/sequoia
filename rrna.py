@@ -7,9 +7,10 @@ from matplotlib import pyplot as plt
 from myplot import ctx
 from scipy.stats import mannwhitneyu
 
+from config import DATA_DIR
 from samplenaming import LUNA_GROUPS, fix_name
 
-NREADS_FILES = '/dfs7/whitesonlab/alavon/Data/ww-greengenes/*.nreads'
+NREADS_FILES = f'{DATA_DIR}/ww-greengenes/*.nreads'
 
 
 def load_nreads_single(f) -> tuple[int, int]:
