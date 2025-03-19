@@ -10,11 +10,11 @@ DATA_DIR = '/dfs7/whitesonlab/alavon/Data'
 
 
 class AbundancePaths:
-    names = f'{DATA_DIR}/ww-kraken/*.vir.json'
-    tids = f'{DATA_DIR}/ww-kraken/*.tid.json'
-    gen = f'{DATA_DIR}/ww-kraken/*.gen.json'
-    phy = f'{DATA_DIR}/ww-kraken/*.phy.json'
-    viror = f'{DATA_DIR}/ww-kraken/*.viror.json'
+    BY_NAME = f'{DATA_DIR}/ww-kraken/*.vir.json'
+    BY_TID = f'{DATA_DIR}/ww-kraken/*.tid.json'
+    BY_GENUS = f'{DATA_DIR}/ww-kraken/*.gen.json'
+    BY_PHY = f'{DATA_DIR}/ww-kraken/*.phy.json'
+    VIR_OR = f'{DATA_DIR}/ww-kraken/*.viror.json'
 
 
 SPIKE_TAXA = [
