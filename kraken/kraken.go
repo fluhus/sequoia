@@ -19,9 +19,10 @@ import (
 
 var (
 	useTaxIDs     = flag.Bool("tid", false, "Use taxon IDs rather than taxon names")
-	mode          = flagx.OneOf("m", "vir", "Reporting mode", "vir", "virp", "virg", "bact", "viror")
 	withOthers    = flag.Bool("others", false, "Include other domains")
 	keepReadCount = flag.Bool("readcount", false, "Output read counts without normalizing to 1")
+	mode          = flagx.OneOf("m", "vir", "Reporting mode",
+		"vir", "virp", "virg", "bact", "viror", "allsp", "allgen")
 )
 
 func main() {
@@ -65,6 +66,11 @@ func main() {
 			rankOfInterest = "G"
 		case "bact":
 			inDomainOfInterest = len(hierarchy) >= 3 && hierarchy[2] == "Bacteria"
+		case "allsp":
+			inDomainOfInterest = true // Report all species.
+		case "allgen":
+			rankOfInterest = "G"
+			inDomainOfInterest = true // Report all genuses.
 		}
 
 		if !inDomainOfInterest {
@@ -76,19 +82,25 @@ func main() {
 			continue
 		}
 
+		reads := 0
 		if rankOfInterest == "S" {
 			// If want "S", acccept "S1", "S2"...
 			if !strings.HasPrefix(line.Rank, rankOfInterest) {
 				continue
 			}
 			// Report only leaves.
-			if line.ReadsClade != line.ReadsDirect {
+			// if line.ReadsClade != line.ReadsDirect {
+			// 	continue
+			// }
+			reads = line.ReadsDirect
+			if reads == 0 {
 				continue
 			}
 		} else {
 			if line.Rank != rankOfInterest {
 				continue
 			}
+			reads = line.ReadsClade
 		}
 
 		if *mode == "virp" { // Attach phylum to the name.
@@ -98,7 +110,7 @@ func main() {
 				name = fmt.Sprint(name, ",", hierarchy[4])
 			}
 		}
-		iabnd[name] += line.ReadsClade
+		iabnd[name] += reads
 	}
 
 	sum := gnum.Sum(maps.Values(iabnd))

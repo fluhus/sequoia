@@ -67,6 +67,7 @@ def extract_species(f: str) -> str:
         path.basename(f)
         .removesuffix('.json')
         .removesuffix('.cov')
+        .removesuffix('.covs')
         .removesuffix('.nz')
     )
 
@@ -195,9 +196,11 @@ def main():
             plt.title(title.format(name=names.get(key, key)) + suf + tsuf)
 
     with ctx('cov-legend', dpi=400):
-        plt.legend(*legend, loc='center')
+        lgnd = plt.legend(*legend, loc='center')
+        for line in lgnd.get_lines():
+            line.set_linewidth(3.0)
         plt.gca().axis('off')
-    del legend
+    del legend, lgnd
 
     # plt.style.use('bmh')
 
@@ -223,7 +226,12 @@ def main():
             for smpl, p in spc_nz.items():
                 g = group_re.findall(smpl)[0]
                 pp[g].append(p)
-        pp = {x: pp[x] for x in sorted(pp)}  # Sort keys
+        pp = {LUNA_GROUPS[x]: pp[x] for x in sorted(pp)}  # Sort keys
         with ctx('cov-prc', dpi=500, sizeratio=0.5):
             violin(pp)
             plt.ylabel('Percent coverage')
+            plt.xticks(rotation=20)
+
+
+if __name__ == '__main__':
+    main()

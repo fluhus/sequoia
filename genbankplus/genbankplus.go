@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"iter"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/fluhus/biostuff/formats/genbank"
@@ -13,9 +14,11 @@ import (
 
 type GenBankPlus struct {
 	genbank.GenBank
-	TaxID   string
-	Host    string
-	MolType string
+	LocusName      string
+	SequenceLength int
+	MolType        string
+	TaxID          string
+	Host           string
 }
 
 func Iter(it iter.Seq2[*genbank.GenBank, error],
@@ -23,7 +26,11 @@ func Iter(it iter.Seq2[*genbank.GenBank, error],
 	return func(yield func(*GenBankPlus, error) bool) {
 		for gb, err := range it {
 			if err != nil {
-				if !yield(&GenBankPlus{GenBank: *gb}, err) {
+				var gbp *GenBankPlus
+				if gb != nil {
+					gbp = &GenBankPlus{GenBank: *gb}
+				}
+				if !yield(gbp, err) {
 					return
 				}
 				continue
@@ -70,16 +77,26 @@ func ToPlus(gb *genbank.GenBank) (*GenBankPlus, error) {
 		p.Host = host
 	}
 
-	// MolType
-	molType := molTypeRE.FindStringSubmatch(gb.Locus)
-	if molType == nil {
-		return p, fmt.Errorf("could not find molecule-type in locus: %q",
-			gb.Locus)
+	// LocusName, MolType
+	locusParts := locusPartsRE.FindStringSubmatch(gb.Locus)
+	if locusParts == nil {
+		return p, fmt.Errorf("could not parse locus: %q", gb.Locus)
 	}
-	p.MolType = molType[1]
+	p.LocusName = locusParts[1]
+	p.MolType = locusParts[3]
+
+	// SequenceLength
+	bp, err := strconv.Atoi(locusParts[2])
+	if err != nil {
+		return p, err
+	}
+	if bp < 1 {
+		return p, fmt.Errorf("bad sequence length: %d", bp)
+	}
+	p.SequenceLength = bp
 
 	return p, nil
 }
 
-// Captures the molecule-type part of the locus field.
-var molTypeRE = regexp.MustCompile(`\s\d+ bp\s+(\S+)`)
+// Captures the length and molecule-type parts of the locus field.
+var locusPartsRE = regexp.MustCompile(`^(.+?)\s+(\d+) bp\s+(\S+)`)

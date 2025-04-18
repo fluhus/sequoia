@@ -6,6 +6,7 @@
 profile*
 .vscode/
 __pycache__/
+slurm-*
 
 # Unrelated files.
 x/

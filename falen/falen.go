@@ -14,13 +14,29 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+const (
+	trimNames = true
+)
+
 func main() {
+	if trimNames {
+		fmt.Println("TRIMMING NAMES")
+	}
+
 	lens := map[string]int{}
 	files, err := filepath.Glob(os.Args[1])
 	common.Die(err)
 	for _, file := range files {
 		for fa, err := range fasta.File(file) {
 			common.Die(err)
+			if trimNames {
+				for i, c := range fa.Name {
+					if c == ' ' {
+						fa.Name = fa.Name[:i]
+						break
+					}
+				}
+			}
 			if lens[string(fa.Name)] != 0 {
 				common.Die(fmt.Errorf("name appeared twice: %q", fa.Name))
 			}

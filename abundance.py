@@ -14,6 +14,8 @@ class AbundancePaths:
     BY_GENUS = f'{DATA_DIR}/ww-kraken/*.gen.json'
     BY_PHY = f'{DATA_DIR}/ww-kraken/*.phy.json'
     VIR_OR = f'{DATA_DIR}/ww-kraken/*.viror.json'
+    ALL_SP = f'{DATA_DIR}/ww-kraken/*.allsp.json'
+    ALL_GEN = f'{DATA_DIR}/ww-kraken/*.allgen.json'
 
 
 SPIKE_TAXA = [
