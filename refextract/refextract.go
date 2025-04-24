@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"lab/common"
-	"lab/config"
 	"os"
 	"regexp"
 	"strings"
@@ -17,14 +16,11 @@ import (
 	"github.com/fluhus/gostuff/ptimer"
 )
 
-const (
-	inFile = config.DataDir + "/refseq/viral.1.1.genomic.fna.gz"
-)
-
 var (
 	rgx    = flagx.Regexp("x", nil, "Pattern to search for")
-	names  = flag.String("n", "", "Comma-separated names to search for")
+	names  = flag.String("n", "", "Comma-separated names to search for (case-insensitive)")
 	outDir = flag.String("o", "", "Output directory")
+	inFile = flagx.FileExists("i", "", "Input fasta to search in")
 )
 
 func main() {
@@ -39,7 +35,7 @@ func main() {
 		*rgx = regexp.MustCompile(pat)
 	}
 
-	common.Die(os.Mkdir(*outDir, 0o755))
+	common.Die(os.MkdirAll(*outDir, 0o755))
 
 	n := 0
 	pt := ptimer.NewFunc(func(i int) string {
@@ -47,7 +43,7 @@ func main() {
 	})
 	lens := map[string]int{}
 	prefixRE := regexp.MustCompile(`^\S+`)
-	for fa, err := range fasta.File(inFile) {
+	for fa, err := range fasta.File(*inFile) {
 		common.Die(err)
 		pt.Inc()
 		if !(*rgx).Match(fa.Name) {
