@@ -2,13 +2,13 @@
 
 from glob import glob
 
-import numpy as np
 from matplotlib import pyplot as plt
 from myplot import ctx
 from scipy.stats import mannwhitneyu
 
 from config import DATA_DIR
 from samplenaming import LUNA_GROUPS, fix_name
+from violin import violin
 
 NREADS_FILES = f'{DATA_DIR}/ww-greengenes/*.nreads'
 
@@ -45,20 +45,6 @@ def plot_bars(data: dict[str, tuple[int, int]]):
             plt.subplot(221 + i)
             gdata = {k: v for k, v in data.items() if k.startswith(g)}
             plot_bars_single(gdata, ymax=mx)
-
-
-def violin(d: dict[str, list]):
-    plt.violinplot(list(d.values()), showmedians=True, showextrema=False)
-    # plt.violinplot(
-    #     list(d.values()),
-    #     quantiles=[[0.25, 0.5, 0.75]] * len(d),
-    #     showextrema=False,
-    # )
-    plt.xticks(list(range(1, len(d) + 1)), d.keys())
-    for i, yy in enumerate(d.values()):
-        xx = np.array([float(i + 1)] * len(yy))
-        xx += np.random.normal(scale=0.03, size=len(xx))
-        plt.plot(xx, yy, 'ko', markersize=2)
 
 
 def plot_violins(data: dict[str, tuple[int, int]]):

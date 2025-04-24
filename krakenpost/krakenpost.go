@@ -2,19 +2,21 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
 	"fmt"
 	"lab/common"
-	"strconv"
+	"lab/kraken"
 	"strings"
 
-	"github.com/fluhus/gostuff/csvdec"
 	"github.com/fluhus/gostuff/flagx"
 	"github.com/fluhus/gostuff/gnum"
 	"github.com/fluhus/gostuff/jio"
 	"github.com/fluhus/gostuff/snm"
 	"golang.org/x/exp/maps"
+)
+
+const (
+	verbose = false
 )
 
 var (
@@ -29,43 +31,46 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	hierarchy := make([]string, 0, 10)
+	if verbose {
+		fmt.Println("Running on file:", args[0])
+		fmt.Println("Mode:", *mode)
+	}
+
 	iabnd := map[string]int{}
+	i := 0
 
-	for line, err := range csvdec.File[krakenLine](args[0], toTSV) {
+	for e, err := range kraken.File(args[0]) {
 		common.Die(err)
+		i++
 
-		level, err := nameToLevel(line.Name)
-		common.Die(err)
-		name := strings.Trim(line.Name, " ")
-		hierarchy = append(hierarchy[:level], name) // TODO(amit): Verify we didn't skip a level.
-
-		// Change name after updating hierarchy, to keep hierarchy
-		// human-readable.
+		name := strings.Trim(e.Name, " ")
 		if *useTaxIDs {
-			name = fmt.Sprint(line.TaxID)
+			name = fmt.Sprint(e.TaxID)
 		}
 
-		if line.Rank == "U" && *withOthers {
-			iabnd["Unclassified"] += line.ReadsDirect
+		if e.Rank == "U" && *withOthers {
+			iabnd["Unclassified"] += e.ReadsDirect
 			continue
 		}
 
-		inDomain := level == 2
+		inDomain := e.Level == 2
 		var inDomainOfInterest bool
 		rankOfInterest := "S"
+		if verbose {
+			fmt.Println(e.Hierarchy)
+		}
 		switch *mode {
 		case "vir":
-			inDomainOfInterest = len(hierarchy) >= 2 && hierarchy[1] == "Viruses"
+			inDomainOfInterest = len(e.Hierarchy) >= 2 && e.Hierarchy[1] == "Viruses"
 		case "viror":
-			inDomainOfInterest = len(hierarchy) >= 2 && hierarchy[1] == "Viruses"
+			inDomainOfInterest = len(e.Hierarchy) >= 2 && e.Hierarchy[1] == "Viruses"
 		case "virp":
-			inDomainOfInterest = len(hierarchy) >= 2 && hierarchy[1] == "Viruses"
+			inDomainOfInterest = len(e.Hierarchy) >= 2 && e.Hierarchy[1] == "Viruses"
 		case "virg":
-			inDomainOfInterest = len(hierarchy) >= 2 && hierarchy[1] == "Viruses"
+			inDomainOfInterest = len(e.Hierarchy) >= 2 && e.Hierarchy[1] == "Viruses"
 			rankOfInterest = "G"
 		case "bact":
-			inDomainOfInterest = len(hierarchy) >= 3 && hierarchy[2] == "Bacteria"
+			inDomainOfInterest = len(e.Hierarchy) >= 3 && e.Hierarchy[2] == "Bacteria"
 		case "allsp":
 			inDomainOfInterest = true // Report all species.
 		case "allgen":
@@ -75,9 +80,9 @@ func main() {
 
 		if !inDomainOfInterest {
 			if *mode == "viror" {
-				iabnd["Other"] += line.ReadsDirect
+				iabnd["Other"] += e.ReadsDirect
 			} else if *withOthers && inDomain {
-				iabnd[name] += line.ReadsClade
+				iabnd[name] += e.ReadsClade
 			}
 			continue
 		}
@@ -85,32 +90,35 @@ func main() {
 		reads := 0
 		if rankOfInterest == "S" {
 			// If want "S", acccept "S1", "S2"...
-			if !strings.HasPrefix(line.Rank, rankOfInterest) {
+			if !strings.HasPrefix(e.Rank, rankOfInterest) {
 				continue
 			}
 			// Report only leaves.
 			// if line.ReadsClade != line.ReadsDirect {
 			// 	continue
 			// }
-			reads = line.ReadsDirect
+			reads = e.ReadsDirect
 			if reads == 0 {
 				continue
 			}
 		} else {
-			if line.Rank != rankOfInterest {
+			if e.Rank != rankOfInterest {
 				continue
 			}
-			reads = line.ReadsClade
+			reads = e.ReadsClade
 		}
 
 		if *mode == "virp" { // Attach phylum to the name.
-			if len(hierarchy) < 5 {
+			if len(e.Hierarchy) < 5 {
 				name = fmt.Sprint(name, ",unknown")
 			} else {
-				name = fmt.Sprint(name, ",", hierarchy[4])
+				name = fmt.Sprint(name, ",", e.Hierarchy[4])
 			}
 		}
 		iabnd[name] += reads
+	}
+	if verbose {
+		fmt.Println("Parsed", i, "lines")
 	}
 
 	sum := gnum.Sum(maps.Values(iabnd))
@@ -121,34 +129,4 @@ func main() {
 		return k, float64(v) / float64(sum)
 	})
 	common.Die(jio.Write(args[1], abnd))
-}
-
-type krakenLine struct {
-	Perc        float64 `csvdec:",ParsePerc"`
-	ReadsClade  int
-	ReadsDirect int
-	Rank        string
-	TaxID       int
-	Name        string
-}
-
-func (k krakenLine) ParsePerc(s string) (float64, error) {
-	return strconv.ParseFloat(strings.Trim(s, " "), 64)
-}
-
-func toTSV(r *csv.Reader) {
-	r.Comma = '\t'
-	r.FieldsPerRecord = -1
-}
-
-func nameToLevel(name string) (int, error) {
-	for i, x := range name {
-		if x != ' ' { // Hit a non-space.
-			if i%2 != 0 { // Odd number of spaces, not good!
-				return 0, fmt.Errorf("bad number of spaces in name: %v", i)
-			}
-			return i / 2, nil
-		}
-	}
-	return 0, fmt.Errorf("found only spaces in name: %q", name)
 }

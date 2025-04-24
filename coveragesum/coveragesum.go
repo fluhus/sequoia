@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
+	"strings"
 
 	"github.com/fluhus/gostuff/jio"
 	"github.com/fluhus/gostuff/snm"
@@ -36,7 +37,11 @@ func main() {
 		for sm, err := range it {
 			common.Die(err)
 			fmt.Println("--", sm.sample, len(sm.cov))
-			name := luna.FixName(sampleToName[sm.sample])
+			name := sampleToName[sm.sample]
+			if strings.HasPrefix(name, "Undetermined") {
+				continue
+			}
+			name = luna.FixName(sampleToName[sm.sample])
 			// if name == "" {
 			// 	common.Die(fmt.Errorf("bad name: %q", sm.sample))
 			// }
