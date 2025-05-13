@@ -1,5 +1,6 @@
 """Abundance plots."""
 
+import argparse
 import colorsys
 import itertools
 import re
@@ -12,10 +13,10 @@ from myplot import ctx
 
 from abundance import AbundancePaths, load_data
 from config import DATA_DIR, WS_DATA_DIR
-from samplenaming import LUNA_GROUPS, fix_name2
+from samplenaming import LUNA_GROUPS, fix_name2, sample_group
+from violin import violin
 
 # Run parameters.
-ALT_TOP = None
 WITH_CMAP = True
 
 # Constant data.
@@ -70,22 +71,19 @@ def fix_dates(s: Iterable[str]) -> list[str]:
     return [rgx.sub('\\1-\\2-\\3', x) for x in s]
 
 
+def df_top(df: pd.DataFrame, n=10) -> list[str]:
+    sums = df.sum().sort_values(ascending=False)
+    tops = sums.index.tolist()[:n]
+    if 'Other' in tops:
+        tops.remove('Other')
+    return tops
+
+
 def jason_plot(df: pd.DataFrame, groups=None):
     df = df.loc[sorted(df.index.tolist())]
     # df.index = fix_locations(df.index.tolist())
     # df.index = fix_dates(df.index.tolist())
-    sums = df.sum().sort_values(ascending=False)
-    tops = sums.index.tolist()[:10]
-    if ALT_TOP:
-        if type(ALT_TOP) is int:
-            tops = sums.index.tolist()[:ALT_TOP]
-        elif type(ALT_TOP) is list:
-            tops = ALT_TOP
-        else:
-            raise TypeError(f'bad type: {type(ALT_TOP)=}')
-    # print('Tops:', tops)
-    if 'Other' in tops:
-        tops.remove('Other')
+    tops = df_top(df)
     plt.style.use('ggplot')
 
     if not groups:
@@ -129,9 +127,43 @@ def jason_plot(df: pd.DataFrame, groups=None):
         plt.gca().axis('off')
 
 
+def comparison_plot(df: pd.DataFrame):
+    tops = df_top(df, 12)
+    assert 'Other' not in tops
+
+    n = len(tops)
+    ncol = 4
+    nrow = (n + ncol - 1) // ncol
+    ncol = min(ncol, n)
+    print(n, nrow, ncol)
+
+    # plt.style.use('bmh')
+    with ctx('jason_cmp', sizeratio=[ncol * 0.5, nrow * 0.75]):
+        for i, t in enumerate(tops):
+            plt.subplot(nrow, ncol, i + 1)
+            d = {}
+            for g, gdf in df.groupby(sample_group):
+                d[LUNA_GROUPS[g]] = gdf[t].values
+            violin(d, separate_colors=False, rotate_xticks=20)
+            plt.title(t)
+            if i % ncol == 0:
+                plt.ylabel('Relative abundance')
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser()
+    p.add_argument('-j', action='store_true', help='Draw jason plot')
+    p.add_argument('-c', action='store_true', help='Draw comparison plot')
+    return p.parse_args()
+
+
 def main():
-    df = load_data(AbundancePaths.BY_NAME, remove_spike=True)
-    jason_plot(df, LUNA_GROUPS)
+    args = parse_args()
+    df = load_data(AbundancePaths.BY_GENUS, remove_spike=True)
+    if args.j:
+        jason_plot(df, LUNA_GROUPS)
+    if args.c:
+        comparison_plot(df)
 
 
 if __name__ == '__main__':

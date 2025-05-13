@@ -17,6 +17,7 @@ class AbundancePaths:
     VIR_OR = f'{DATA_DIR}/ww-kraken/*.viror.json'
     ALL_SP = f'{DATA_DIR}/ww-kraken/*.allsp.json'
     ALL_GEN = f'{DATA_DIR}/ww-kraken/*.allgen.json'
+    BACT = f'{DATA_DIR}/ww-kraken/*.bct.json'
     MINDY = f'{DATA_DIR}/ww-mindy/*.json'
 
     SPECIES2 = f'{DATA_DIR}/ww2-kraken/*.vir.json'

@@ -6,15 +6,23 @@ import (
 	"iter"
 	"lab/common"
 	"lab/luna"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
+	"slices"
 	"strings"
 
+	"github.com/fluhus/gostuff/gnum"
 	"github.com/fluhus/gostuff/jio"
 	"github.com/fluhus/gostuff/snm"
 	"golang.org/x/exp/maps"
+)
+
+const (
+	meanType = linMean
+	batch    = 1
 )
 
 func main() {
@@ -24,33 +32,60 @@ func main() {
 	files, err := sortFiles(filepath.Join(inDir, "*.cov.json"))
 	common.Die(err)
 	fmt.Println(maps.Keys(files))
-
-	sampleToName := sampleNumToName()
+	fmt.Println("Mean type:", meanType)
 
 	for spc, it := range iterFiles(files) {
 		fmt.Println(spc)
 		sumByGroup := map[string][]int{}
-		for g := range luna.GroupNameMapping {
-			sumByGroup[g] = nil
+		if batch == 1 {
+			for g := range luna.GroupNameMapping {
+				sumByGroup[g] = nil
+			}
 		}
+		logByGroup := map[string][]float64{}
 		nz := map[string]float64{}
+		nSamples := 0
 		for sm, err := range it {
 			common.Die(err)
-			fmt.Println("--", sm.sample, len(sm.cov))
-			name := sampleToName[sm.sample]
-			if strings.HasPrefix(name, "Undetermined") {
+			if batch == 1 && strings.HasPrefix(sm.sample, "Undetermined") {
 				continue
 			}
-			name = luna.FixName(sampleToName[sm.sample])
-			// if name == "" {
-			// 	common.Die(fmt.Errorf("bad name: %q", sm.sample))
-			// }
-			// g := luna.SampleGroup(luna.FixName(name))
-			g := luna.SampleGroup(name)
-			sumByGroup[g] = add(sumByGroup[g], sm.cov)
-			nz[name] = nonZeroRatio(sm.cov)
+			if batch == 2 && !batch2RE.MatchString(sm.sample) {
+				continue
+			}
+			nSamples++
+			fmt.Println("--", sm.sample, len(sm.cov))
+			if batch == 1 {
+				sm.sample = luna.FixName(sm.sample)
+			}
+			g := sampleGroup(sm.sample)
+			if meanType == geoMean {
+				logByGroup[g] = addLog(logByGroup[g], sm.cov)
+			} else {
+				sumByGroup[g] = add(sumByGroup[g], sm.cov)
+			}
+			nz[sm.sample] = nonZeroRatio(sm.cov)
 		}
-		if len(sumByGroup) != 4 { // Assertion
+		fmt.Printf("^^ (%v samples)\n", nSamples)
+
+		// Divide by number of samples for mean.
+		switch meanType {
+		case linMean:
+			for _, v := range sumByGroup {
+				for i, x := range v {
+					v[i] = gnum.Idiv(x, nSamples)
+				}
+			}
+		case geoMean:
+			for k, v := range logByGroup {
+				sumByGroup[k] = snm.SliceToSlice(v, func(f float64) int {
+					// -1 because we added 1 before log.
+					return int(math.Round(math.Exp(f/float64(nSamples)))) - 1
+				})
+			}
+		}
+
+		if batch == 1 && len(sumByGroup) != 4 { // Assertion
 			panic(fmt.Sprintf("bad length: %v", len(sumByGroup)))
 		}
 		equalizeLens(sumByGroup)
@@ -64,7 +99,10 @@ func sortFiles(glob string) (map[string]map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	re := regexp.MustCompile(`([^/]+)\.(\d+)\.cov\.json`)
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files found")
+	}
+	re := regexp.MustCompile(`([^/]+)__(.+)\.cov\.json`)
 	m := snm.NewDefaultMap(func(s string) map[string]string {
 		return map[string]string{}
 	})
@@ -120,32 +158,31 @@ func iterSpecies(files map[string]string) iter.Seq2[sampleCoverage, error] {
 }
 
 func add(dst, src []int) []int {
-	if len(dst) < len(src) {
-		dst = append(dst, make([]int, len(src)-len(dst))...)
-	}
+	dst = grow(dst, len(src))
 	for i, x := range src {
 		dst[i] += x
 	}
 	return dst
 }
 
-func sampleNumToName() map[string]string {
-	m := map[string]string{}
-	for i, s := range luna.SampleOrdering {
-		m[fmt.Sprint(i+1)] = s
+func addLog(dst []float64, src []int) []float64 {
+	dst = grow(dst, len(src))
+	for i, x := range src {
+		dst[i] += math.Log(float64(x + 1))
 	}
-	return m
+	return dst
 }
 
-func wrapSlices(m map[string][]int) map[string]any {
-	mm := map[string]any{}
-	for k, v := range m {
-		mm[k] = map[string]any{
-			"type": "data",
-			"data": v,
-		}
+func grow[T any](a []T, n int) []T {
+	if len(a) >= n {
+		return a
 	}
-	return mm
+	a = slices.Grow(a, n-len(a))
+	var zero T
+	for len(a) < n {
+		a = append(a, zero)
+	}
+	return a
 }
 
 func equalizeLens(m map[string][]int) {
@@ -160,8 +197,7 @@ func equalizeLens(m map[string][]int) {
 		if len(v) == 0 || len(v) == mx {
 			continue
 		}
-		dif := mx - len(v)
-		m[k] = append(v, make([]int, dif)...)
+		m[k] = grow(v, mx)
 	}
 }
 
@@ -177,3 +213,31 @@ func nonZeroRatio(a []int) float64 {
 	}
 	return float64(nz) / float64(len(a))
 }
+
+var batch2RE = regexp.MustCompile(`_([^_]+)_(SOL|INF)_`)
+
+func sampleGroup(s string) string {
+	if batch == 1 {
+		return luna.SampleGroup(s)
+	}
+	if batch == 2 {
+		m := batch2RE.FindStringSubmatch(s)
+		if m == nil {
+			panic(fmt.Sprintf("bad sample name: %q", s))
+		}
+		return m[1] + "_" + m[2]
+	}
+	panic(fmt.Sprintf("unreachable, batch=%v", batch))
+}
+
+// Gurads batch to be 1 or 2.
+func _() {
+	var x [2]struct{}
+	_ = x[batch-1]
+}
+
+const (
+	noMean = iota
+	linMean
+	geoMean
+)

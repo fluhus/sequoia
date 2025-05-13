@@ -5,19 +5,26 @@ package main
 import (
 	"fmt"
 	"lab/common"
+	"lab/config"
 	"os"
 	"regexp"
+	"runtime/debug"
 
 	"github.com/fluhus/biostuff/formats/fastq"
+	"github.com/fluhus/gostuff/jio"
 	"github.com/fluhus/gostuff/sets"
+	"github.com/fluhus/gostuff/snm"
+)
+
+const (
+	krkFile = config.WSDataDir + "/krk_std2.json"
 )
 
 func main() {
-	// All "Norwalk virus" descendents.
-	taxids := sets.Of("11983",
-		"95340", "122928", "122929", "262897", "340017", "1246677",
-		"235544", "490039", "490043", "552592", "1160947",
-		"1529909", "1529918", "1529924")
+	debug.SetGCPercent(20)
+
+	taxids, err := childrenOf("2843396") // Jouyvirus.
+	common.Die(err)
 	fmt.Fprintln(os.Stderr, len(taxids), "taxids")
 
 	re := regexp.MustCompile(`kraken:taxid\|(\d+)`)
@@ -31,4 +38,36 @@ func main() {
 			fq.Write(os.Stdout)
 		}
 	}
+}
+
+// Returns the children of the given tax ID,
+// from the Kraken DB hierarchy.
+func childrenOf(tid string) (sets.Set[string], error) {
+	m := map[string]*taxEntry{}
+	if err := jio.Read(krkFile, &m); err != nil {
+		return nil, err
+	}
+	s := sets.Set[string]{}
+	q := &snm.Queue[string]{}
+	q.Enqueue(tid)
+	for tid := range q.Seq() {
+		x := m[tid]
+		if x == nil {
+			return nil, fmt.Errorf("tid not found: %q", tid)
+		}
+		s.Add(tid)
+		// fmt.Println("Name:", x.Name)
+		for _, ctid := range x.ChildTIDs {
+			q.Enqueue(ctid)
+		}
+	}
+	return s, nil
+}
+
+type taxEntry struct {
+	Name      string
+	Level     string
+	ParentTID string
+	ChildTIDs []string `json:",omitempty"`
+	Accs      []string `json:",omitempty"`
 }

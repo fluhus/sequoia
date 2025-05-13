@@ -32,17 +32,19 @@ iref=$(((i-1) % nrefs + 1))
 r=$(find "$refdir" -name \*.fasta | sort | sed 's/.fasta//' | line $iref)
 rb=$(basename "$r")
 s=$(ls -1S "$indir" | grep .1.fastq.zst | sed 's/.1.fastq.zst//' | line $isample)
+outfile=$outdir/${rb}__$s.sam.zst
 
 echo "Sample:    ($isample) $s"
 echo "Reference: ($iref) $rb"
+echo "Output:    $outfile"
 
 bowtie2 -p 4 --no-head --no-unal -t --very-fast \
   -x $r \
   -1 $indir/$s.1.fastq.zst \
   -2 $indir/$s.2.fastq.zst \
-  -S >(zstd > $outdir/$rb.$isample.sam.zst)
+  -S >(zstd > $outfile)
 
 sleep 1
-zstd --test $outdir/$rb.$isample.sam.zst
+zstd --test $outfile
 
 echo Done

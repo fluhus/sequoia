@@ -34,7 +34,9 @@ def main():
         plt.xlabel('Sequencing depth (reads)')
         plt.ylabel('Number of OTUs')
         # plt.xscale('log')
-        plt.legend()
+
+        for line in plt.legend().get_lines():
+            line.set_linewidth(3.0)
 
 
 if __name__ == '__main__':

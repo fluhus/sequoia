@@ -42,6 +42,7 @@ func main() {
 	// files = files[:4]
 	fmt.Println("Found", len(files), "files")
 
+	fmt.Println("Loading abundances")
 	var names []string
 	var counts []map[string]int
 	pt := ptimer.New()
@@ -62,7 +63,7 @@ func main() {
 	pt = ptimer.New()
 	rrf := map[string][][]int{}
 	for i := range names {
-		xx, yy := rarefy.Rarefy(counts[i], rstep, nperms)
+		xx, yy := rarefy.Rarefy(maps.Values(counts[i]), rstep, nperms)
 		rrf[names[i]] = [][]int{xx, yy}
 		pt.Inc()
 	}
